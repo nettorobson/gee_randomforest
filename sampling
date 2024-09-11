@@ -1,8 +1,8 @@
 /*
-Below is the JavaScript code representing the import of the agriculture areas sampling.
+Below is the JavaScript code representing the import of the 'agriculture' and 'other uses' sampling.
 To transfer them to another script in GEE, paste this code into the editor and click "Convert" in the suggestion tooltip.
 
-Segue abaixo o código JavaScript com a amostragem das áreas de agricultura a ser importada no código principal.
+Segue abaixo o código JavaScript com a amostragem das áreas de 'agricultura' e 'outros usos' a ser importada no código principal.
 Para fazer essa importação, copie e cole este código no editor do GEE e clique em "Convert" no campo de sugestões.
 */
 
