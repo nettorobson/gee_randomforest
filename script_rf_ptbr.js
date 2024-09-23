@@ -69,7 +69,7 @@ var removerNuvensESombras = function(img){
 
 /* OBSERVAÇÃO
 Inicialmente, com base nos requisitos do problema, a coleção mais apropriada para esta análise seria a ‘S2_SR_HARMONIZED’. 
-Ela traz dados de reflectância da superfície (Surface Reflectance), e não do topo da atmosfera (TOA) como as coleções ‘SR’ e ‘SR_HARMONIZED’. 
+Ela traz dados de reflectância da superfície (Surface Reflectance), e não do topo da atmosfera (TOA) como as coleções ‘S2’ e ‘S2_HARMONIZED’. 
 Porém não se tem disponíveis os dados de 2017 para ‘S2_SR_HARMONIZED’.
 
 Usar ‘S2’ para 2017 e ‘S2_SR’ para 2023 não é uma solução adequada, pois os dois satélites 2A e 2B, apesar de parecidos, têm diferentes calibragens radiométricas. 
