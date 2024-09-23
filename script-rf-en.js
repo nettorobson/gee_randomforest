@@ -1,45 +1,44 @@
 /*
-PROJETO
-Classificação supervisionada de áreas de agricultura em imagens de satelite Sentinel-2 usando o classificador Random Forest.
-
-OBJETIVOS
-- Criação de mosaicos para os anos de 2017 e 2023;
-- Treinamento, classificação e validação do modelo;
-- Cálculo de acurácia do modelo a partir da Matriz de Confusão;
-- Análise histórica das áreas ocupadas de agricultura;
-- Renderização dos mapas classificados e demais produtos. 
-
-CONCLUSÕES PRELIMINARES
-- A alta acurácia de treinamento (99.42%) indica que o modelo está se ajustando bem aos dados de treino, com baixos erros de classificação. 
-A quantidade muito pequena de falsos positivos (2 e 0) e falsos negativos (1 e 3) indica a confiança nos resultados obtidos.
-
-- Para a validação, a acurácia de 97.14% também é alta, indicando que o modelo de Random Forest está desempenhando muito bem na classificação das áreas como agricultura. 
-A quantidade de falsos positivos (1) e falsos negativos (4) é baixa reforça a confiança nos resultados.
-
-- A combinação da alta acurácia de treinamento e de validação podem indicar que o modelo está generalizando bem, e que não está sobreajustado (overfitting).
-
-- Com base na classificação, a área ocupada por agricultura no ano de 2023 aumentou 6,24 % em comparação com o ano de 2017, avançando de 26.258,22 km² para 27.897,09 km². 
-Este percentual representa 1.639 km² adicionais de áreas convertidas para agricultura durante o período.
+PROJECT
+Supervised classification of agricultural areas in a region of Brazil, applying the Random Forest classifier to Sentinel-2 satellite imagery. Coded in JavaScript for the Google Earth Engine (GEE) IDE.
 
 
-PRÓXIMAS ETAPAS e OPORTUNIDADES DE MELHORIA
-- Utilização/exploração do dataset do Dynamic World para a classificação das áreas (DW possui alto potencial de uso para este tipo de problema. 
-Além da boa resolução temporal, e de possuir resolução espacial de 10m (como as Imagens Sentinel-2 utilizadas neste script) utiliza sólidas fontes de dados, entre elas, o Mapbiomas, que possui com classificação personalizada e particularizada para o território brasileiro; 
-- Utilização/classificação de outras categorias de uso e ocupação do solo, visando enriquecer a análise.
-- Criação de séries temporais e gráficos de NDVI, visando maior precisão na coleta de amostras e classificação;  
-- Geração de métricas complementares de desempenho do modelo, como a precisão e o recall, por exemplo;
-- Cálculo da importância de cada banda no processamento feito pelo algoritmo;
-- Fine tuning/paramater tuning: Ajuste dos parâmetros e ajuste fino do modelo para otimizar a acurácia e as demais métricas;
-- Geração de mapas dinâmicos/animados indicando a evolução anual das classes-alvo;
-- Aplicação de nova camada de refatoração;
-- Testes finais;
-- Revisão e refinamento da documentação;
+
+OBJECTIVES
+- Create mosaics for the years 2017 and 2023;
+- Model training, classification, and validation;
+- Calculation of model accuracy using the Confusion Matrix;
+- Historical analysis of the agricultural areas;
+- Rendering of the classified maps and other products.
+
+
+PRELIMINARY CONCLUSIONS
+- The high training accuracy (99.42%) indicates that the model is fitting well to the training data, with low classification errors. 
+- The very small number of false positives (2 and 0) and false negatives (1 and 3) suggests confidence in the results obtained.
+- For validation, the accuracy of 97.14% is also a good metric, indicating that the Random Forest model is performing well in classifying areas as 'agriculture'. 
+- The low number of false positives (1) and false negatives (4) further reinforces confidence in the results.
+- The combination of high training and validation accuracy may indicate that the model is generalizing well and not overfitting.
+- Based on the classification results, the area occupied by agriculture in 2023 increased by 6.24% compared to 2017, expanding from 26,258.22 km² to 27,897.09 km².
+- This percentage represents an additional 1,639 km² of areas converted to agriculture during this period.
+
+
+NEXT STEPS
+- Use/exploration of the Dynamic World dataset for classifying areas (DW has high potential for this type of problem. Besides having good temporal resolution and a spatial resolution of 10m—similar to the Sentinel-2 images used in this script—it uses solid data sources, such as Mapbiomas, which has customized and detailed classifications for the Brazilian territory);
+- Use/classification for other land uses and land cover categories to enrich the analysis;
+- Creation of time series and NDVI graphs for increasing accuracy in sample collection and classification;
+- Generation of complementary performance metrics for the model, such as precision and recall;
+- Performance measurement for each band for the algorithm processing;
+- Fine-tuning/parameter tuning: Adjustment of parameters and fine-tuning of the model to optimize accuracy and other metrics;
+- Generation of dynamic/animated maps indicating the annual evolution of the target-classes;
+- Apply a new refactoring layer;
+- Final testing;
+- Documentation review and refinement.
 */
 
 
-// ETAPA 1 - RECURSOS INICIAIS E ÁREA DE INTERESSE
+// STEP 1 - RESOURCES AND AOI
 
-// Definição da área-alvo conforme requisito do projeto 
+// Definition of the target area according to the project requirements
 var geometry = ee.Geometry.Polygon([
   [
     [-58.389544224642215, -11.200339407332578],
@@ -49,39 +48,39 @@ var geometry = ee.Geometry.Polygon([
   ]
 ]);
 
-// Função para criar máscara de sombra usando NDVI e SWIR
-var criarMascaraSombras = function(img) {
+// Function to create a shadow mask using NDVI and SWIR
+var createShadowMask = function(img) {
   var ndvi = img.normalizedDifference(['B8', 'B4']);
-  var sombraNDVI = ndvi.lt(0.1); // valores baixos de NDVI (indicativos de sombra)
+  var shadowNDVI = ndvi.lt(0.1); // low NDVI values (predictor of shadow)
   var swir = img.select('B11');
-  var sombraSWIR = swir.lt(1000); // valores baixos de SWIR (indicativos de sombra)
-  var mascaraSombras = sombraNDVI.and(sombraSWIR);
-  return img.updateMask(mascaraSombras.not()); // Máscara invertida para a remoção e update
+  var shadowSWIR = swir.lt(1000); // low SWIR values (predictor of shadow)
+  var shadowsMask = shadowNDVI.and(shadowSWIR);
+  return img.updateMask(shadowsMask.not()); // Inverted mask for removal and update
 };
 
-// Função para remover nuvens e sombras
-var removerNuvensESombras = function(img){
-  var qa = img.select('QA60'); // Banda de nuvens
-  var mascaraNuvens = qa.eq(0);
-  img = criarMascaraSombras(img); // Aplicação da máscara de sombras
-  return img.updateMask(mascaraNuvens); // Aplicação da máscara de nuvens
+// Function to remove clouds and shadows
+var removeCloudShadows = function(img){
+  var qa = img.select('QA60'); // Cloud band
+  var cloudMask = qa.eq(0);
+  img = createShadowMask(img); // Application of the shadow mask
+  return img.updateMask(cloudMask); // Application of the cloud mask
 };
 
-/* OBSERVAÇÃO
-Inicialmente, com base nos requisitos do problema, a coleção mais apropriada para esta análise seria a ‘S2_SR_HARMONIZED’. 
-Ela traz dados de reflectância da superfície (Surface Reflectance), e não do topo da atmosfera (TOA) como as coleções ‘SR’ e ‘SR_HARMONIZED’. 
-Porém não se tem disponíveis os dados de 2017 para ‘S2_SR_HARMONIZED’.
+/* NOTE
+Initially, based on the problem requirements, the most appropriate image collection for this analysis would be 'S2_SR_HARMONIZED'. 
+It provides surface reflectance data instead of top-of-atmosphere (TOA) data like the 'S2' and 'S2_HARMONIZED' collections. 
+However, 'S2_SR_HARMONIZED' data for 2017 is not available.
 
-Usar ‘S2’ para 2017 e ‘S2_SR’ para 2023 não é uma solução adequada, pois os dois satélites 2A e 2B, apesar de parecidos, têm diferentes calibragens radiométricas. 
-Portanto, as imagens não seriam consistentes ao comparar-se uma com a outra.
+Using 'S2' for 2017 and 'S2_SR' for 2023 is not a suitable solution, as the two satellites 2A and 2B, although similar, have different radiometric calibrations. 
+Therefore, the images would not be consistent when comparing each other.
 
-A solução escolhida para este cenário prioriza a CONSISTÊNCIA dos dados, visando garantir que o classificador Random Forest funcione de maneira precisa e confiável. 
-Optou-se pela utilização da coleção ‘S2_HARMONIZED’ para 2017 e para 2023, executando todos os tratamentos cabíveis para “correção” os efeitos da atmosfera (nuvens, sombra, aerossois e outros).  
-A 'S2_HARMONIZED' possui a banda QA60 para o período, facilitando o pré-processamento. 
+The chosen solution for this scenario prioritizes the CONSISTENCY of the data to ensure that the Random Forest classifier works accurately and reliably. 
+The 'S2_HARMONIZED' collection was chosen for 2017 AND 2023, applying all possible treatments to adjust the effects of the atmosphere (clouds, shadow, aerosols, and others).
+The 'S2_HARMONIZED' collection includes the QA60 band for the period, easing pre-processing.
 
-Além da correção de nuvens e sombra, considerou-se ainda a viabilidade de outras possibilidades, como aplicação do método 6S, DOS, SCC e o tratamento externo via Sen2Cor por exemplo. 
-A aplicação de SIAC consumiu muitos recursos computacionais, ao mesmo tempo que o ideal seria ainda sua aplicação a cada imagem que geraria o mosaico.
-Assim, optou-se por uma abordagem mais objetiva e compatível com o problema de classificação
+In addition to cloud and shadow correction, the feasibility of other possibilities was also considered, such as applying the 6S, DOS, SCC methods, and external processing via Sen2Cor, for instance.
+The application of SIAC consumed too many computational resources, while the ideal scenario would still be its application to each image that would generate the mosaic.
+Thus, a more objective and compatible approach with the classification problem was chosen.
 */
 
 // Função para criar mosaico com input do ano desejado
@@ -92,7 +91,7 @@ var criarMosaico = function(ano, geometry) {
                .filterBounds(geometry)
                .filterDate(dataInicio, dataFim)
                .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', 5)) // Homogeneizar imagens com poucas nuvens
-               .map(removerNuvensESombras)
+               .map(removeCloudShadows)
                .median()
                .clip(geometry);
   
