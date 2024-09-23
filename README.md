@@ -8,6 +8,45 @@ Supervised classification of agricultural areas in a region of Brazil, applying 
 <br>
 <br>
 
+**OBJECTIVES** <br>
+- Create mosaics for the years 2017 and 2023;
+- Model training, classification, and validation;
+- Calculation of model accuracy using the Confusion Matrix;
+- Historical analysis of the agricultural areas;
+- Rendering of the classified maps and other products.
+
+<br>
+<br>
+
+**PRELIMINARY CONCLUSIONS** <br>
+- The high training accuracy (99.42%) indicates that the model is fitting well to the training data, with low classification errors.
+- The very small number of false positives (2 and 0) and false negatives (1 and 3) suggests confidence in the results obtained.
+
+- For validation, the accuracy of 97.14% is also a good metric, indicating that the Random Forest model is performing well in classifying areas as 'agriculture'.
+- The low number of false positives (1) and false negatives (4) further reinforces confidence in the results.
+
+- The combination of high training and validation accuracy may indicate that the model is generalizing well and not overfitting.
+
+- Based on the classification results, the area occupied by agriculture in 2023 increased by 6.24% compared to 2017, expanding from 26,258.22 km² to 27,897.09 km².
+- This percentage represents an additional 1,639 km² of areas converted to agriculture during this period.
+
+<br>
+
+**NEXT STEPS** <br>
+- Use/exploration of the Dynamic World dataset for classifying areas (DW has high potential for this type of problem. Besides having good temporal resolution and a spatial resolution of 10m—similar to the Sentinel-2 images used in this script—it uses solid data sources, such as Mapbiomas, which has customized and detailed classifications for the Brazilian territory);
+- Use/classification for other land uses and land cover categories to enrich the analysis;
+- Creation of time series and NDVI graphs for increasing accuracy in sample collection and classification;
+- Generation of complementary performance metrics for the model, such as precision and recall;
+- Performance measurement for each band for the algorithm processing;
+- Fine-tuning/parameter tuning: Adjustment of parameters and fine-tuning of the model to optimize accuracy and other metrics;
+- Generation of dynamic/animated maps indicating the annual evolution of the target-classes;
+- Apply a new refactoring layer;
+- Final testing;
+- Documentation review and refinement.
+
+<br>
+<br>
+
 # gee_randomforest 🇧🇷
 
 **PROJETO** <br>
